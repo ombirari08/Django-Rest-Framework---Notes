@@ -1,0 +1,222 @@
+
+What Is serialization and deserialization
+-------------------------------------------
+In this lecture, you will learn the concept of serialization and deserialization. Serialization is
+the process of converting a model object or queryset into JSON format—or any other format
+the client requires. Think of serializers as translators for your data.
+
+For example, imagine you have a book written in English that you understand, but you want to share 
+it with someone who speaks a different language. A translator helps bridge that gap. Similarly, 
+serializers convert data from your database into a format that clients (apps or browsers) can understand,
+such as JSON or XML.
+
+In Django REST Framework, serializers make it easy to send data between the server (where your website runs)
+and the client (like a browser or app). They handle the conversion automatically, so developers don’t need
+to manually define how each field is turned into JSON.
+
+The most common type is the ModelSerializer, which is smart enough to automatically convert your model 
+fields into JSON based on your model's structure—just like how Django model forms work. If you're familiar
+with model forms, serializers will feel simple and intuitive.
+
+Deserialization is the reverse process:
+taking data received from the client (usually in JSON) and converting it back into a model instance or 
+queryset, so Django can work with it in your application.
+
+
+
+What is APIView in Django REST Framework?
+-------------------------------------------
+The APIView class is a base class provided by Django REST Framework (DRF) for building class-based API views. 
+It extends Django's standard View class to add powerful REST-specific behavior.
+
+📌 In Simple Terms:
+
+APIView lets you define HTTP methods like GET, POST, PUT, and DELETE as Python methods, 
+allowing you to write clean, organized code for building APIs.
+-----------------------------------------------
+Example:
+from rest_framework.views import APIView
+from rest_framework.response import Response
+
+class HelloAPIView(APIView):
+    def get(self, request):
+        return Response({"message": "Hello, world!"})
+
+-----------------------------------------------
+
+✅ What Are Mixins?
+--------------------------------------------------
+
+Mixins are reusable code classes in object-oriented programming that provide specific functionalities to
+our application. In Django REST Framework (DRF), mixins are used to add common functionalities to views such as Create, Read, Update, and Delete (CRUD) operations.
+
+🔹 Why Use Mixins?
+
+In the previous lecture, you saw that we had to write many lines of code for a single CRUD operation—even
+after extending the APIView class in our class-based views.
+
+But here’s the good news: we can simplify our code further by extending mixin classes with our class-based views..
+-------------------------------
+🔹 Built-in Mixins in DRF
+-------------------------------
+Django REST Framework provides five built-in mixins to handle common functionalities so that we don’t have to repeat code across the application:
+
+ListModelMixin
+Returns a list of objects using the built-in list() method.
+
+CreateModelMixin
+Creates a new object in the database using the create() method.
+
+RetrieveModelMixin
+Retrieves a single object (e.g., single employee data) using retrieve().
+
+UpdateModelMixin
+Updates existing data using the primary key and the update() method.
+
+DestroyModelMixin
+Deletes an object using the primary key with the destroy() method.
+
+Each mixin provides the corresponding built-in methods to handle specific functionalities.
+---------------------------------------------------------------------------------------------
+🔸 What Are Generics?
+Generics in DRF are pre-built view classes that combine mixins and common API behaviors to perform CRUD operations—without writing method functions like get, post, etc. manually.
+They work similarly to mixins but with even less boilerplate code.
+
+🛠️ How Do Generics Work?
+All you need to provide in your class-based view are:
+queryset – defines which objects to work with
+
+
+serializer_class – defines how the data should be serialized
+
+
+(Optional) lookup_field – used for operations that require a primary key or custom field lookup
+---------------------------------------------------------------------------------------------
+🆕 Introducing ViewSets - To simplify things even further, Django REST Framework provides a powerful abstraction called ViewSets.
+-------------------------------
+🔸 What Are ViewSets?
+-------------------------------
+
+As the name suggests, ViewSets are a set of views that combine the functionalities of both:
+
+    Views (handling HTTP requests)
+
+    Serializers (handling data validation and representation)
+
+This makes it even easier and more efficient to perform standard CRUD operations.
+-------------------------------
+🛠️ Two Ways to Implement ViewSets
+-------------------------------
+You can implement ViewSets using one of the following base classes:
+-------------------------------
+1. viewsets.ViewSet
+
+You have to manually define methods like:
+
+list() – to list all records
+
+create() – to create a new record
+
+retrieve() – to fetch a single record by primary key
+
+update() – to update a record
+
+destroy() – to delete a record
+
+All operations are handled in a single class.
+-------------------------------
+2. viewsets.ModelViewSet
+
+This is the most powerful and commonly used ViewSet.
+
+It requires only:
+
+queryset
+
+serializer_class
+
+It automatically handles:
+
+All standard CRUD operations
+
+Both primary key-based and non-primary key-based actions
+-------------------------------
+🔄 How Do ViewSets Work?
+
+ViewSets work in combination with something called routers.
+
+🔸 Routers in DRF
+
+Django REST Framework provides a router class that:
+
+Automatically determines the URL patterns based on your ViewSet
+
+Handles all the routing behind the scenes
+
+So, once you register your ViewSet with a router:
+✅ You don’t need to define URL patterns manually in urls.py
+---------------------------------------------------------------------------------------------
+
+✅ What is ModelViewSet?
+
+ModelViewSet is a shortcut in Django REST Framework that gives you all the basic API operations (like list, create, retrieve, update, delete) for a model — all in one class.
+Reduces boilerplate by combining ListAPIView, RetrieveAPIView, CreateAPIView, UpdateAPIView, and DestroyAPIView into one class.
+---------------------------------------------------------------------------------------------
+✅ What is a Nested Serializer in Django REST Framework (DRF)?
+
+A nested serializer is when you include one serializer inside another, to represent related models (like ForeignKey, OneToOne, or ManyToMany relationships) in the API response or input.
+---------------------------------------------------------------------------------------------
+✅ What’s Happening Here? Blog App create Nested serialization for blog and comments
+1. comments = CommentSerializer(many=True, read_only=True)
+
+This line nests the CommentSerializer inside the BlogSerializer.
+
+It assumes that the Comment model has a ForeignKey to Blog, like this:
+
+class Comment(models.Model):
+    blog = models.ForeignKey(Blog, related_name='comments', on_delete=models.CASCADE)
+    content = models.TextField()
+
+
+The related_name='comments' means:
+
+From a Blog instance, you can do blog.comments.all() to get all related comments.
+
+many=True: Because a blog can have many comments.
+
+read_only=True: The comments are shown in the blog API output, but not accepted as input when creating/updating a blog.
+
+2. fields = '__all__'
+
+This tells DRF to include all fields from the Blog model in the API.
+
+Plus, it includes the comments field that you manually added above.
+--------------------------------------------------------------------------------------------------------
+✅ Primary Key Based Operation on Blog Comment
+✅ What This Code Does:
+
+You are creating two views to handle primary key-based operations (Retrieve, Update, Delete) on:
+
+- Blog
+- Comment
+----------------------------------------------------------------------------------------
+These views are using DRF’s generic class-based view:
+RetrieveUpdateDestroyAPIView
+This built-in class provides three operations based on pk (primary key):
+
+🧱 How It Works (Behind the Scenes):
+🔹 queryset = Blog.objects.all()
+
+This tells DRF: “Look for the blog object in the Blog table.”
+
+Similarly, for comments: Comment.objects.all().
+
+🔹 serializer_class = BlogSerializer
+
+DRF uses this serializer to convert the model instance to JSON, and validate incoming data for updates.
+
+🔹 lookup_field = 'pk'
+
+DRF uses this field (the primary key, usually id) to find the object.
+
+Example: if the URL is /blogs/5/, DRF will find Blog.objects.get(pk=5)
