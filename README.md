@@ -1,12 +1,12 @@
-# Django REST Framework - Notes API 📝
+# Django REST Framework - Notes
 
 A simple Notes API built using **Django REST Framework (DRF)**. This project serves as both a practical example and an educational reference for building RESTful APIs in Django.
 
 ---
 
-## 📘 Introduction to Django REST Framework (DRF)
+## Introduction to Django REST Framework (DRF)
 
-### ❓ What is Django REST Framework?
+### What is Django REST Framework?
 
 Django REST Framework (DRF) is a powerful and flexible toolkit for building Web APIs using Django.
 
@@ -16,7 +16,7 @@ Django REST Framework (DRF) is a powerful and flexible toolkit for building Web 
 
 ---
 
-### ✅ Why Use DRF?
+### Why Use DRF?
 
 | Benefit          | Description                                                  |
 |------------------|--------------------------------------------------------------|
@@ -29,7 +29,7 @@ Django REST Framework (DRF) is a powerful and flexible toolkit for building Web 
 
 ---
 
-### 🔍 DRF vs Regular Django
+### DRF vs Regular Django
 
 | Feature         | Django                  | Django REST Framework     |
 |----------------|--------------------------|----------------------------|
@@ -40,16 +40,16 @@ Django REST Framework (DRF) is a powerful and flexible toolkit for building Web 
 
 ---
 
-## 🔗 API (Application Programming Interface)
+## API (Application Programming Interface)
 
-### ✅ What is an API?
+### What is an API?
 
 An API is a set of rules that allows software systems to communicate.
 
 - Acts as a bridge between frontend and backend
 - Sends requests and receives responses, usually in JSON or XML
 
-### ✅ Why APIs Matter
+### Why APIs Matter
 
 - Connect web/mobile frontend with backend services
 - Use external systems (e.g., payment, weather)
@@ -57,13 +57,13 @@ An API is a set of rules that allows software systems to communicate.
 
 ---
 
-## 🌐 REST API
+## REST API
 
-### ✅ What is a REST API?
+### What is a REST API?
 
 A **REST API** is an architectural style that uses HTTP methods for communication. It's widely used in modern web development.
 
-### ✅ Key Features of REST
+### Key Features of REST
 
 - Simple & scalable
 - Stateless
@@ -73,9 +73,9 @@ A **REST API** is an architectural style that uses HTTP methods for communicatio
 
 ---
 
-## 🔁 Serialization & Deserialization in DRF
+## Serialization & Deserialization in DRF
 
-### 🛠️ What is Serialization?
+### What is Serialization?
 
 Converts complex Django model/queryset data into JSON/XML for client-side use.
 
@@ -85,7 +85,7 @@ DRF provides `ModelSerializer` to make this easier:
 - Auto maps model fields
 - Works like Django model forms
 
-### 🔁 What is Deserialization?
+### What is Deserialization?
 
 Reverse process of taking client data (JSON) and converting it back into Django model instances.
 
@@ -95,9 +95,9 @@ Reverse process of taking client data (JSON) and converting it back into Django 
 
 ---
 
-## 🧱 APIView in DRF
+## APIView in DRF
 
-### ✅ What is APIView?
+### What is APIView?
 
 `APIView` is a class-based view in DRF that helps structure HTTP methods (GET, POST, PUT, DELETE).
 
@@ -139,9 +139,9 @@ Reverse process of taking client data (JSON) and converting it back into Django 
    ```bash
    python manage.py runserver
 ## Mixins in Django REST Framework
-### 🔁  What Are Mixins?
+### What Are Mixins?
 Mixins are reusable code classes in object-oriented programming that provide specific functionalities to our application. In Django REST Framework (DRF), mixins are used to add common functionalities to views such as Create, Read, Update, and Delete (CRUD) operations.
-### 🔁  Why Use Mixins?
+### Why Use Mixins?
 In the previous lecture, you saw that we had to write many lines of code for a single CRUD operation—even
 after extending the APIView class in our class-based views.
 But here’s the good news: we can simplify our code further by extending mixin classes with our class-based views..
@@ -453,7 +453,346 @@ Let’s say we have two models: `Department` and `Employee`. Each employee belon
       }
     }
 
-## Nested Serializers in Django REST Framework
+## Primary Key Based Operations in Django REST Framework
+
+### What are Primary Key Based Operations?
+
+Primary Key (PK) based operations in Django REST Framework refer to actions performed on a **single instance of a model** using its primary key (usually the `id` field).
+
+These operations typically include:
+
+- Retrieving a single object
+- Updating an object
+- Deleting an object
+
+They are commonly used in detail views where a specific resource is accessed via its ID, like:
+### Example Serializer
+
+Let’s say we have two models: `Department` and `Employee`. Each employee belongs to a department.
+1. **Example of a ModelViewSet**
+   ```python
+    # serializers.py
+   from rest_framework import serializers
+   from .models import Employee
+   
+   class EmployeeSerializer(serializers.ModelSerializer):
+       class Meta:
+           model = Employee
+           fields = ['id', 'name', 'email']
 
 
 
+3. **Using Generic Views for PK Operations**
+   ```python
+    # views.py
+   from rest_framework.generics import RetrieveUpdateDestroyAPIView
+   from .models import Employee
+   from .serializers import EmployeeSerializer
+   
+   class EmployeeDetailView(RetrieveUpdateDestroyAPIView):
+       queryset = Employee.objects.all()
+       serializer_class = EmployeeSerializer
+
+5. **Using ViewSet for PK Operations**
+   ```python
+   from rest_framework import viewsets
+   from .models import Employee
+   from .serializers import EmployeeSerializer
+   
+   class EmployeeViewSet(viewsets.ModelViewSet):
+       queryset = Employee.objects.all()
+       serializer_class = EmployeeSerializer
+
+7. **Behind the Scenes: How DRF Handles It**
+   ```python
+      # urls.py using routers
+   from rest_framework.routers import DefaultRouter
+   from .views import EmployeeViewSet
+   
+   router = DefaultRouter()
+   router.register(r'employees', EmployeeViewSet)
+   urlpatterns = router.urls
+
+   
+
+## Pagination in Django REST Framework
+### What is Pagination?
+
+**Pagination** is the process of dividing large datasets into smaller, manageable chunks (pages). In APIs, it helps improve performance and reduce load by returning a limited number of records per request instead of sending all data at once.
+
+---
+
+### Why Use Pagination?
+
+- Prevents API overload by avoiding large response sizes.
+- Improves response time and performance.
+- Makes it easier to build frontend interfaces with page navigation.
+- Useful when working with lists of hundreds or thousands of records.
+
+---
+
+## Pagination Overview in DRF
+
+Django REST Framework provides several built-in pagination classes:
+
+| Pagination Class               | Description                                                |
+|-------------------------------|------------------------------------------------------------|
+| `PageNumberPagination`        | Default pagination; uses page numbers (`?page=2`)          |
+| `LimitOffsetPagination`       | Uses limit and offset parameters (`?limit=10&offset=20`)   |
+| `CursorPagination`            | Uses a cursor to paginate through results efficiently      |
+
+---
+
+### 1. Global Paginationd
+
+To enable pagination globally (for all views), define it in your project’s `settings.py`:
+1. **Behind the Scenes: How DRF Handles It**
+    ```python
+     # settings.py
+
+   REST_FRAMEWORK = {
+       'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+       'PAGE_SIZE': 5  # Number of records per page
+   } 
+2. **Now all views returning lists will use pagination by default, e.g.:**
+   ```python
+     {
+    "count": 25,
+    "next": "http://api.example.com/employees/?page=2",
+    "previous": null,
+    "results": [
+        {
+            "id": 1,
+            "name": "John Doe"
+        },
+        ...
+    ]
+}
+
+### 2. Custom Pagination
+You can create your own pagination class if you want to change page structure or logic.
+1. **Example: Custom Page Number Pagination**
+    ```python
+     # pagination.py
+
+   from rest_framework.pagination import PageNumberPagination
+   
+   class CustomPageNumberPagination(PageNumberPagination):
+       page_size = 10
+       page_size_query_param = 'page_size'
+       max_page_size = 100
+
+2. **Use It in a View or ViewSet**
+   ```python
+    # views.py
+
+   from rest_framework import viewsets
+   from .models import Employee
+   from .serializers import EmployeeSerializer
+   from .pagination import CustomPageNumberPagination
+   
+   class EmployeeViewSet(viewsets.ModelViewSet):
+       queryset = Employee.objects.all()
+       serializer_class = EmployeeSerializer
+       pagination_class = CustomPageNumberPagination
+2. **Example: Custom LimitOffset Pagination**
+   ```python
+    # views.py
+   from rest_framework.pagination import LimitOffsetPagination
+   
+   class CustomLimitOffsetPagination(LimitOffsetPagination):
+       default_limit = 10
+       max_limit = 100
+
+## Filtering in Django REST Framework
+
+### What is Filtering?
+
+**Filtering** allows API users to retrieve specific subsets of data based on query parameters. This improves the user experience and performance by narrowing down results based on conditions like category, date, name, etc.
+
+---
+
+## 1. Basic Filtering
+
+DRF provides a simple integration with the `django-filter` package to add filtering capabilities to your API views.
+
+1. **Install django-filter**
+   ```bash
+   pip install django-filter
+2. **Step 2: Update settings.py**
+   ```python
+    # settings.py
+
+   REST_FRAMEWORK = {
+       'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
+   }
+3. **Step 3: Use Filtering in Your ViewSet**
+   ```python
+   # views.py
+
+   from django_filters.rest_framework import DjangoFilterBackend
+   from rest_framework import viewsets
+   from .models import Employee
+   from .serializers import EmployeeSerializer
+   
+   class EmployeeViewSet(viewsets.ModelViewSet):
+       queryset = Employee.objects.all()
+       serializer_class = EmployeeSerializer
+       filter_backends = [DjangoFilterBackend]
+       filterset_fields = ['name', 'department']
+4. **Example API Calls:**
+   ```python
+   GET /employees/?name=John
+   GET /employees/?department=HR
+
+## 2. Custom Filtering in Django REST Framework
+
+### What is Custom Filtering?
+
+Custom filtering is used when you want full control over the filtering logic, such as filtering on related models or applying conditions not covered by default filters.
+
+Instead of relying on `django-filter`, you manually override the `get_queryset()` method in your view or viewset.
+
+---
+
+3. **Example: Custom Filtering in ViewSet**
+   ```python
+   # views.py
+   
+   from rest_framework import viewsets
+   from .models import Employee
+   from .serializers import EmployeeSerializer
+   
+   class EmployeeViewSet(viewsets.ModelViewSet):
+       serializer_class = EmployeeSerializer
+   
+       def get_queryset(self):
+           queryset = Employee.objects.all()
+           name = self.request.query_params.get('name')
+           department = self.request.query_params.get('department')
+   
+           if name:
+               queryset = queryset.filter(name__icontains=name)
+   
+           if department:
+               queryset = queryset.filter(department__name__icontains=department)
+   
+           return queryset
+
+## 3. Advanced Filtering with FilterSet
+### What is What is a FilterSet??
+
+A FilterSet is a class provided by the django-filter package that lets you create reusable and powerful filters with advanced capabilities.
+
+This method is highly maintainable, especially when your filters grow in complexity.
+
+---
+
+1. **Step 1: Create a FilterSet**
+   ```python
+   # filters.py
+   
+   import django_filters
+   from .models import Employee
+   
+   class EmployeeFilter(django_filters.FilterSet):
+       name = django_filters.CharFilter(lookup_expr='icontains')
+       department = django_filters.CharFilter(field_name='department__name', lookup_expr='icontains')
+       joined_after = django_filters.DateFilter(field_name='join_date', lookup_expr='gte')
+   
+       class Meta:
+           model = Employee
+           fields = ['name', 'department', 'joined_after']
+
+2. **Step 2: Use It in the ViewSet**
+   ```python
+     # views.py
+
+   from rest_framework import viewsets
+   from django_filters.rest_framework import DjangoFilterBackend
+   from .models import Employee
+   from .serializers import EmployeeSerializer
+   from .filters import EmployeeFilter
+   
+   class EmployeeViewSet(viewsets.ModelViewSet):
+       queryset = Employee.objects.all()
+       serializer_class = EmployeeSerializer
+       filter_backends = [DjangoFilterBackend]
+       filterset_class = EmployeeFilter
+
+## Search and Ordering Filters in Django REST Framework
+
+In Django REST Framework (DRF), **SearchFilter** and **OrderingFilter** are powerful tools that enhance the usability of your API by allowing clients to:
+
+- Search across text fields (like name or description)
+- Order results based on fields (like name, date, ID, etc.)
+
+These filters work out of the box with minimal setup and improve the flexibility and interactivity of list endpoints.
+
+---
+
+## 1. Search Filter
+
+### What is Search Filter?
+
+**SearchFilter** allows you to search records using keywords. It performs case-insensitive partial matching (similar to SQL's `LIKE` operator).
+
+### 🔧 Setup
+1. **Step 1: Enable in `settings.py` (optional)**
+   ```python
+   # settings.py
+
+   REST_FRAMEWORK = {
+       'DEFAULT_FILTER_BACKENDS': [
+           'django_filters.rest_framework.DjangoFilterBackend',
+           'rest_framework.filters.SearchFilter',
+       ]
+   }
+
+2. **Step 2: Add filter_backends and search_fields in your ViewSet**
+   ```python
+    from rest_framework import viewsets, filters
+   from .models import Employee
+   from .serializers import EmployeeSerializer
+   
+   class EmployeeViewSet(viewsets.ModelViewSet):
+       queryset = Employee.objects.all()
+       serializer_class = EmployeeSerializer
+       filter_backends = [filters.SearchFilter]
+       search_fields = ['name', 'email', 'department__name']
+
+## 1. Ordering Filter
+OrderingFilter allows clients to order query results by one or more model fields.
+### 🔧 Setup
+1. **Step 1: Enable in `settings.py` (optional)**
+   ```python
+   # settings.py
+
+   REST_FRAMEWORK = {
+       'DEFAULT_FILTER_BACKENDS': [
+           'rest_framework.filters.OrderingFilter',
+       ]
+   }
+
+
+2. **Step 2: Add filter_backends and ordering_fields in your ViewSet**
+   ```python
+   from rest_framework import viewsets, filters
+   from .models import Employee
+   from .serializers import EmployeeSerializer
+   
+   class EmployeeViewSet(viewsets.ModelViewSet):
+       queryset = Employee.objects.all()
+       serializer_class = EmployeeSerializer
+       filter_backends = [filters.OrderingFilter]
+       ordering_fields = ['id', 'name', 'email']
+       ordering = ['id']  # default ordering
+2. **Combining Search & Order Filters**
+   ```python
+   class EmployeeViewSet(viewsets.ModelViewSet):
+       queryset = Employee.objects.all()
+       serializer_class = EmployeeSerializer
+       filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+       search_fields = ['name', 'email']
+       ordering_fields = ['name', 'email']
+       ordering = ['name']
